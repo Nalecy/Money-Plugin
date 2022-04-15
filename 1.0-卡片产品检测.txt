@@ -1,0 +1,89 @@
+// ==UserScript==
+// @name         ibox卡片产品检测
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       You
+// @match        https://www.ibox.art/zh-cn/find/result/?type=*&subtype=*&grade=*&sort=*&sale=*&kw=*
+// @require      https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/3.2.1/jquery.min.js
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=segmentfault.com
+// ==/UserScript==
+
+//卡片产品检测
+
+(function () {
+
+    function check() {
+
+        var moneys = new Array(10);
+        var monitoring_name = '';//检测产品的名称
+        var items = document.getElementsByClassName("product-container");
+        var read_length = 10;//读取产品的数量
+        var count_top = 0;//统计顶部专辑栏的item数目，全部跳过不读
+        for (var i = 0; i < read_length; i++) {
+            var innerText = items[i].innerText;
+            if (innerText.includes("专辑")) {//这是顶部的专辑栏，不读取
+                read_length++;
+                count_top++;
+                continue;
+            }
+
+            //获取监测产品的名字
+            var name_index = innerText.indexOf("#");
+            monitoring_name = innerText.substring(0, name_index);
+            monitoring_name = monitoring_name.replace(/[\r\n]/g, "");
+
+            //获取监测产品价格
+            var first_index = innerText.lastIndexOf("￥");
+            var money = innerText.substring(first_index + 1, innerText.length);
+            if (innerText.includes("盲")) {//是盲盒开出的卡
+                var end_index = money.lastIndexOf("盲");
+                money = money.substring(0, end_index);
+            }
+            moneys[i - count_top] = money;
+        }
+        var current_money = moneys.toString();
+        current_money = current_money.replace(/[\r\n]/g, "");
+        var myDate = new Date();
+        var timestamp = myDate.getTime();//时间戳
+        var current_data = current_money;
+
+        let blob = new Blob([current_data], {type: ''}),
+            fileName = monitoring_name + "_" + timestamp + '.txt'; // 文件名称
+        const link = document.createElement('a'); // 创建a标签
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click(); // 模拟点击a标签
+        window.URL.revokeObjectURL(link.href);
+
+        var timeout = 0;
+        timeout = sessionStorage.getItem(monitoring_name);
+        if (timeout == null) {
+            timeout = prompt("Set timeout (Second):");
+            sessionStorage.setItem(monitoring_name, timeout);
+        } else timeout = parseFloat(timeout);
+        var count = 0;
+        var current = location.href;
+        if (timeout > 0) setTimeout(reload, 1000 * timeout);
+
+        function reload() {
+            setTimeout(reload, 1000 * timeout);
+            count++;
+            console.log('每（' + timeout + '）秒自动刷新,刷新次数：' + count);
+            var fr4me = '<frameset cols=\'*\'>\n<frame src=\'' + current + '\'/>';
+            fr4me += '</frameset>';
+            with (document) {
+                write(fr4me);
+                void (close());
+            }
+        }
+    }
+
+    function show() {
+        setTimeout(check, 4000);//必须延迟等加载出数据
+    }
+
+    show();
+
+})();
+

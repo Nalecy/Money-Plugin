@@ -1,0 +1,62 @@
+// ==UserScript==
+// @name         ibox主界面滑块按钮脚本
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       You
+// @match        https://www.ibox.art/zh-cn/market/?type=0&brand=&sort=0&box=&classify=
+// @grant        none
+// ==/UserScript==
+
+//主界面滑块按钮脚本
+
+
+(function () {
+    function dragandDrop(id, clientX, clientY, distance) {
+        var elem = document.getElementById(id),
+            k = 0,
+            interval;
+        iME(elem, "mousedown", 0, 0, clientX, clientY);
+        interval = setInterval(function () {
+            k++;
+            iter(k);
+            if (k === distance) {
+                clearInterval(interval);
+                iME(elem, "mouseup", clientX + k, clientY, 320 + k, 400);
+            }
+        }, 10);
+
+        function iter(y) {
+            iME(elem, "mousemove", clientX + y, clientY, clientX + y, clientY);
+        }
+
+        function iME(obj, event, screenXArg, screenYArg, clientXArg, clientYArg) {
+            var mousemove = document.createEvent("MouseEvent");
+            mousemove.initMouseEvent(event, true, true, window, 0, screenXArg, screenYArg, clientXArg, clientYArg, 0, 0, 0, 0, 0, null);
+            obj.dispatchEvent(mousemove);
+        }
+    }
+
+    window.setTimeout(function () {
+        obj = document.getElementById("nc_1_n1z");
+        console.log(obj);
+        if (obj != null) {//界面出现滑块，需要滑动
+            console.log('6666');
+            obj.target = '_self';
+            var _owh = obj.getBoundingClientRect();//拖拽按钮：40x32 拖拽栏：300x32
+            var _ox = _owh.width / 2, _oh = _owh.height / 2;
+            _ox = _ox + _owh.x;
+            _oh = _oh + _owh.y;
+            dragandDrop("nc_1_n1z", _ox, _oh, 300);
+        }
+    }, 5000);
+
+})();
+
+
+
+
+
+
+
+
